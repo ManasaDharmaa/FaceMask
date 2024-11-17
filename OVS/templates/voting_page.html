@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voting Page</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"> <!-- Bootstrap CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Chart.js library -->
+    <style>
+        /* Custom CSS for responsive card design */
+        .card {
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .card-body {
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+	<nav class="navbar navbar-dark bg-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <img src="{% static 'img/ecp.png' %}" width="160" height="40" class="d-inline-block align-top" alt="Logo">
+            </a>
+            <div class="navbar-text text-white">
+                <a href="{% url 'admin_logout' %}" class="btn btn-danger">Logout</a>
+            </div>
+        </div>
+    </nav>
+    <div class="container">
+	<br><br><br><br>
+        <div class="row">
+			<div class="col-md-12">
+				<div class="card">
+					<div class="card-body">
+						<div class="row">
+							<div class="col-md-12 text-center">
+								<img src="{% static 'img/ecp.png' %}" width="210" height="50" class="d-inline-block align-top" alt="Logo">
+								<h2 class="mt-4 mb-4"><b>ELECTION COMMISION OF INDIA - VOTING PANEL</b></h2>
+								<h3>Total Votes: {{ total_votes }}</h3>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<marquee><a style="color:red;"><b>Disclaimer : Please Note that this is a confidential site accesible only for ELECTION COMMISION OF INDIA to view the stats of the Voting process.</a></b></marquee>
+		<!-- Currently leading party in votes -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="alert alert-success" role="alert">
+                    Currently leading party in votes:
+                    {% with leading_party=parties|dictsort:"to.count"|last %}
+                        <strong>{{ leading_party.full_name }}</strong>
+                        <img src="{% static 'img/' %}{{ leading_party.name|lower }}.png" height="50" width="70">
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+		
+        <div class="row">
+            {% for party in parties %}
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ party.full_name }}</h5>
+                        <!-- Display party image -->
+                        <label for="{{ party.name }}"><img src="{% static 'img/' %}{{ party.name|lower }}.png" height="50" width="70"></label>
+                        <p class="card-text">Votes: {{ party.to.count }}</p>
+                        <!-- Add canvas for chart -->
+                        <canvas id="voteChart{{ forloop.counter }}"></canvas>
+                    </div>
+                </div>
+            </div>
+            <script>
+                // JavaScript for creating chart
+                var ctx{{ forloop.counter }} = document.getElementById('voteChart{{ forloop.counter }}').getContext('2d');
+                var voteChart{{ forloop.counter }} = new Chart(ctx{{ forloop.counter }}, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Votes'],
+                        datasets: [{
+                            label: 'Votes',
+                            data: [{{ party.to.count }}], // Data for votes
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            yAxes: [{
+                                ticks: {
+                                    beginAtZero: true
+                                }
+                            }]
+                        }
+                    }
+                });
+            </script>
+            {% endfor %}
+        </div>
+        <!-- Common graph for total votes -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <canvas id="totalVotesChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript for creating total votes chart
+        var ctxTotal = document.getElementById('totalVotesChart').getContext('2d');
+        var totalVotesChart = new Chart(ctxTotal, {
+            type: 'bar',
+            data: {
+                labels: [{% for party in parties %} '{{ party.full_name }}', {% endfor %}],
+                datasets: [{
+                    label: 'Total Votes',
+                    data: [{% for party in parties %} {{ party.to.count }}, {% endfor %}],
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }]
+                }
+            }
+        });
+    </script>
+</body>
+</html>
